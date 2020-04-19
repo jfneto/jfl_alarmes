@@ -1,4 +1,4 @@
-class Event
+class JflEvent
   # Evento de conexão
   attr_accessor :type
   attr_accessor :imei
@@ -16,6 +16,4 @@ class Event
   attr_accessor :user_zone
   attr_accessor :count
 
-  def initialize
-  end
 end

@@ -7,24 +7,37 @@ module JflAlarmes
   class JflMonitor
     attr_accessor :server
     attr_accessor :events
-
-    # inicia o monitoramento
-    def run
-      # fica escutando a porta 2034
-      @server = TCPServer.new 2034
-      # lista de eventos
-      @events = Array.new
+    attr_accessor :thread
     
-      Thread.new{
-        Thread.start(@server.accept) do |socket|
-          puts "Conexão aceita"
-          # joga o socket para a classe de monitoramento
+    # inicia o monitoramento
+    def run(socket_port)
+
+      if @server.nil?
+        @close = false
+        # fica escutando a porta 2034
+        @server = TCPServer.new socket_port
+        # lista de eventos
+        @events = Array.new
+    
+        @thread = Thread.new{
+          socket = @server.accept
           handle_connection(socket)
-        end
-      }
+        }
+      else
+        puts "Thread já rodando use o comando force_close() para fechar a thread"
+      end
+    end
+    
+    def force_close()
+      @close = true
+      Thread.kill(@thread)
+      @server.close
     end
 
     private
+    
+    attr_accessor :close
+    
     def handle_connection(socket)
       loop do
         msg = socket.recvfrom(30) # recebe a mensage - 30 bytes - do cliente
@@ -47,6 +60,11 @@ module JflAlarmes
         # Keep alive
         if(msg[0][0] == '@')
           @events << keep_alive(socket)
+        end
+        
+        if(@close)
+          socket.close
+          break
         end
       end
     end
